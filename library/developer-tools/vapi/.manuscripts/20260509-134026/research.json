@@ -1,0 +1,335 @@
+{
+  "api_name": "vapi",
+  "novelty_score": 0,
+  "alternatives": [
+    {
+      "name": "VapiAI/cli",
+      "url": "https://github.com/VapiAI/cli",
+      "language": "Go",
+      "install_method": "",
+      "stars": 0,
+      "last_updated": "",
+      "command_count": 35,
+      "has_json_output": false,
+      "has_auth_support": false
+    },
+    {
+      "name": "VapiAI/mcp-server",
+      "url": "https://github.com/VapiAI/mcp-server",
+      "language": "TypeScript",
+      "install_method": "",
+      "stars": 0,
+      "last_updated": "",
+      "command_count": 12,
+      "has_json_output": false,
+      "has_auth_support": false
+    },
+    {
+      "name": "@vapi-ai/server-sdk",
+      "url": "https://github.com/VapiAI/server-sdk-typescript",
+      "language": "TypeScript",
+      "install_method": "",
+      "stars": 0,
+      "last_updated": "",
+      "command_count": 79,
+      "has_json_output": false,
+      "has_auth_support": false
+    },
+    {
+      "name": "vapi-server-sdk (python)",
+      "url": "https://github.com/VapiAI/server-sdk-python",
+      "language": "Python",
+      "install_method": "",
+      "stars": 0,
+      "last_updated": "",
+      "command_count": 79,
+      "has_json_output": false,
+      "has_auth_support": false
+    },
+    {
+      "name": "askjohngeorge/vapi-vct",
+      "url": "https://github.com/askjohngeorge/vapi-vct",
+      "language": "Python",
+      "install_method": "",
+      "stars": 0,
+      "last_updated": "",
+      "command_count": 4,
+      "has_json_output": false,
+      "has_auth_support": false
+    }
+  ],
+  "gaps": [],
+  "patterns": [],
+  "recommendation": "proceed",
+  "researched_at": "2026-05-09T17:43:00Z",
+  "novel_features": [
+    {
+      "name": "Cost rollup",
+      "command": "cost summary",
+      "description": "Aggregate call cost across the synced store by assistant, day, or phone number.",
+      "rationale": "Requires local SQL aggregation; the API's /analytics endpoint requires a hand-built query body for this exact roll-up.",
+      "example": "vapi-pp-cli cost summary --since 7d --by assistant --json",
+      "why_it_matters": "Agents can answer 'how much did each assistant cost last week' in one call instead of paginating /call.",
+      "group": "Local state that compounds"
+    },
+    {
+      "name": "Transcript FTS",
+      "command": "transcripts search",
+      "description": "Full-text search across every synced call transcript with assistant/date filters.",
+      "rationale": "The Vapi API has no transcript-search endpoint; FTS5 over the local store unlocks it.",
+      "example": "vapi-pp-cli transcripts search 'cancel my appointment' --since 30d --json --select id,assistantId,startedAt",
+      "why_it_matters": "Agents can find calls matching natural-language queries without scanning every transcript over the wire.",
+      "group": "Local state that compounds"
+    },
+    {
+      "name": "Ended-reason histogram",
+      "command": "calls why",
+      "description": "Group recent calls by endedReason and print counts to surface drop-offs and silence-timeouts.",
+      "rationale": "Needs local group-by across many calls; the API only returns per-call endedReason.",
+      "example": "vapi-pp-cli calls why --since 24h --json",
+      "why_it_matters": "One call answers 'why are my calls ending today' for triage.",
+      "group": "Local state that compounds"
+    },
+    {
+      "name": "Orphan detection",
+      "command": "orphans",
+      "description": "List tools, files, phone numbers, and workflows that no assistant references.",
+      "rationale": "Cross-table join across synced resources; impossible without local state.",
+      "example": "vapi-pp-cli orphans --json",
+      "why_it_matters": "Agents can clean up unused billable resources before they accrue cost.",
+      "group": "Cleanup and hygiene"
+    },
+    {
+      "name": "Assistant A/B compare",
+      "command": "assistants compare",
+      "description": "Side-by-side cost, average duration, and ended-reason distribution for two assistants over a window.",
+      "rationale": "Needs grouped local query; the API has no comparison endpoint.",
+      "example": "vapi-pp-cli assistants compare a1b2 c3d4 --since 7d --json",
+      "why_it_matters": "Quick read on whether a new assistant variant is winning before fully rolling it out.",
+      "group": "Quality signals"
+    },
+    {
+      "name": "Stale assistants",
+      "command": "stale assistants",
+      "description": "Assistants with no calls in the last N days based on the synced store.",
+      "rationale": "Local query over the call/assistant join; the API has no inactivity filter.",
+      "example": "vapi-pp-cli stale assistants --days 30 --json",
+      "why_it_matters": "Cleanup target list before deletion.",
+      "group": "Cleanup and hygiene"
+    },
+    {
+      "name": "Bulk-call planner",
+      "command": "calls bulk",
+      "description": "Read a CSV of customers and print a planned outbound batch with cost estimate; --dry-run by default.",
+      "rationale": "Agent-friendly batch surface with explicit confirm; the dashboard owns this UX in the official CLI.",
+      "example": "vapi-pp-cli calls bulk --csv customers.csv --assistant-id a1b2 --phone-number-id p9 --json",
+      "why_it_matters": "Agents can stage and review an outbound campaign before committing.",
+      "group": "Agent-native plumbing"
+    },
+    {
+      "name": "Webhook replay",
+      "command": "listen replay",
+      "description": "Re-fire the last N captured webhook events at a forward target without waiting for a real call.",
+      "rationale": "We persist a ring buffer; the official listen forwards but does not retain.",
+      "example": "vapi-pp-cli listen replay --last 5 --forward-to localhost:3000/webhook",
+      "why_it_matters": "Speeds up local webhook handler iteration.",
+      "group": "Agent-native plumbing"
+    },
+    {
+      "name": "Live call watch",
+      "command": "calls watch",
+      "description": "Long-poll for newly active or ended calls and print one line per event.",
+      "rationale": "Polls the synced store; agent-friendly without a websocket dependency.",
+      "example": "vapi-pp-cli calls watch --interval 5s --iterations 3 --json",
+      "why_it_matters": "A streamable handle on call lifecycle for agent supervision loops.",
+      "group": "Agent-native plumbing"
+    },
+    {
+      "name": "Assistant drift",
+      "command": "drift assistants",
+      "description": "Diff every assistant against a baseline assistant to see system-prompt, model, voice, and tool drift.",
+      "rationale": "Needs local pairing of full assistant configs; no API endpoint compares.",
+      "example": "vapi-pp-cli drift assistants --baseline a1b2 --json",
+      "why_it_matters": "Catch unintentional config drift across a fleet of assistants.",
+      "group": "Quality signals"
+    }
+  ],
+  "novel_features_built": [
+    {
+      "name": "Cost rollup",
+      "command": "cost summary",
+      "description": "Aggregate call cost across the synced store by assistant, day, or phone number.",
+      "rationale": "Requires local SQL aggregation; the API's /analytics endpoint requires a hand-built query body for this exact roll-up.",
+      "example": "vapi-pp-cli cost summary --since 7d --by assistant --json",
+      "why_it_matters": "Agents can answer 'how much did each assistant cost last week' in one call instead of paginating /call.",
+      "group": "Local state that compounds"
+    },
+    {
+      "name": "Transcript FTS",
+      "command": "transcripts search",
+      "description": "Full-text search across every synced call transcript with assistant/date filters.",
+      "rationale": "The Vapi API has no transcript-search endpoint; FTS5 over the local store unlocks it.",
+      "example": "vapi-pp-cli transcripts search 'cancel my appointment' --since 30d --json --select id,assistantId,startedAt",
+      "why_it_matters": "Agents can find calls matching natural-language queries without scanning every transcript over the wire.",
+      "group": "Local state that compounds"
+    },
+    {
+      "name": "Ended-reason histogram",
+      "command": "calls why",
+      "description": "Group recent calls by endedReason and print counts to surface drop-offs and silence-timeouts.",
+      "rationale": "Needs local group-by across many calls; the API only returns per-call endedReason.",
+      "example": "vapi-pp-cli calls why --since 24h --json",
+      "why_it_matters": "One call answers 'why are my calls ending today' for triage.",
+      "group": "Local state that compounds"
+    },
+    {
+      "name": "Orphan detection",
+      "command": "orphans",
+      "description": "List tools, files, phone numbers, and workflows that no assistant references.",
+      "rationale": "Cross-table join across synced resources; impossible without local state.",
+      "example": "vapi-pp-cli orphans --json",
+      "why_it_matters": "Agents can clean up unused billable resources before they accrue cost.",
+      "group": "Cleanup and hygiene"
+    },
+    {
+      "name": "Assistant A/B compare",
+      "command": "assistants compare",
+      "description": "Side-by-side cost, average duration, and ended-reason distribution for two assistants over a window.",
+      "rationale": "Needs grouped local query; the API has no comparison endpoint.",
+      "example": "vapi-pp-cli assistants compare a1b2 c3d4 --since 7d --json",
+      "why_it_matters": "Quick read on whether a new assistant variant is winning before fully rolling it out.",
+      "group": "Quality signals"
+    },
+    {
+      "name": "Stale assistants",
+      "command": "stale assistants",
+      "description": "Assistants with no calls in the last N days based on the synced store.",
+      "rationale": "Local query over the call/assistant join; the API has no inactivity filter.",
+      "example": "vapi-pp-cli stale assistants --days 30 --json",
+      "why_it_matters": "Cleanup target list before deletion.",
+      "group": "Cleanup and hygiene"
+    },
+    {
+      "name": "Bulk-call planner",
+      "command": "calls bulk",
+      "description": "Read a CSV of customers and print a planned outbound batch with cost estimate; --dry-run by default.",
+      "rationale": "Agent-friendly batch surface with explicit confirm; the dashboard owns this UX in the official CLI.",
+      "example": "vapi-pp-cli calls bulk --csv customers.csv --assistant-id a1b2 --phone-number-id p9 --json",
+      "why_it_matters": "Agents can stage and review an outbound campaign before committing.",
+      "group": "Agent-native plumbing"
+    },
+    {
+      "name": "Webhook replay",
+      "command": "listen replay",
+      "description": "Re-fire the last N captured webhook events at a forward target without waiting for a real call.",
+      "rationale": "We persist a ring buffer; the official listen forwards but does not retain.",
+      "example": "vapi-pp-cli listen replay --last 5 --forward-to localhost:3000/webhook",
+      "why_it_matters": "Speeds up local webhook handler iteration.",
+      "group": "Agent-native plumbing"
+    },
+    {
+      "name": "Live call watch",
+      "command": "calls watch",
+      "description": "Long-poll for newly active or ended calls and print one line per event.",
+      "rationale": "Polls the synced store; agent-friendly without a websocket dependency.",
+      "example": "vapi-pp-cli calls watch --interval 5s --iterations 3 --json",
+      "why_it_matters": "A streamable handle on call lifecycle for agent supervision loops.",
+      "group": "Agent-native plumbing"
+    },
+    {
+      "name": "Assistant drift",
+      "command": "drift assistants",
+      "description": "Diff every assistant against a baseline assistant to see system-prompt, model, voice, and tool drift.",
+      "rationale": "Needs local pairing of full assistant configs; no API endpoint compares.",
+      "example": "vapi-pp-cli drift assistants --baseline a1b2 --json",
+      "why_it_matters": "Catch unintentional config drift across a fleet of assistants.",
+      "group": "Quality signals"
+    }
+  ],
+  "narrative": {
+    "display_name": "Vapi",
+    "headline": "Every Vapi feature, plus a local SQLite store that makes cost analytics, transcript search, and orphan cleanup possible — none of which the official CLI offers.",
+    "value_prop": "Vapi is the developer platform for voice AI agents. vapi-pp-cli matches the official CLI on CRUD across all 15 resources, then adds offline analytics, transcript FTS, and a webhook replay buffer that the official tool can't touch. Every command supports --json/--select/--csv/--dry-run, and the full surface auto-mirrors to MCP for agents.",
+    "auth_narrative": "Vapi uses bearer-token auth. Set VAPI_API_KEY in your environment, or run `vapi-pp-cli auth set-token \u003ckey\u003e`. Get a key from https://dashboard.vapi.ai. The official CLI's browser-OAuth login is intentionally not duplicated; if you want it, install the upstream `vapi` for `vapi login` and let this CLI read the same token.",
+    "quickstart": [
+      {
+        "command": "vapi-pp-cli auth set-token $VAPI_API_KEY",
+        "comment": "Bearer auth — get a key from dashboard.vapi.ai"
+      },
+      {
+        "command": "vapi-pp-cli sync",
+        "comment": "Pull every assistant, call, tool, phone-number, workflow, and campaign into the local store"
+      },
+      {
+        "command": "vapi-pp-cli assistant list --json --select id,name,model.provider,voice.provider",
+        "comment": "Field-projected agent-native listing"
+      },
+      {
+        "command": "vapi-pp-cli cost summary --since 7d --by assistant --json",
+        "comment": "Local roll-up that the API has no preset for"
+      },
+      {
+        "command": "vapi-pp-cli transcripts search 'cancel my appointment' --since 30d --json",
+        "comment": "FTS5 over every synced transcript"
+      },
+      {
+        "command": "vapi-pp-cli call create --assistant-id a1b2 --customer-id c3d4 --dry-run",
+        "comment": "Plan an outbound call before committing (use --stdin for richer customer object)"
+      }
+    ],
+    "troubleshoots": [
+      {
+        "symptom": "401 Invalid Key — 'private key vs public key'",
+        "fix": "Vapi has separate public and private keys. Use the private (server) key for this CLI; the public key is for the browser SDK."
+      },
+      {
+        "symptom": "sync is slow on first run",
+        "fix": "Initial sync paginates every resource; subsequent runs are incremental via updatedAtGt. Use `vapi-pp-cli sync calls --since 7d` to scope the first pull."
+      },
+      {
+        "symptom": "transcripts search returns nothing",
+        "fix": "Run `vapi-pp-cli sync calls` first — the FTS index lives in the local store, not the API."
+      },
+      {
+        "symptom": "listen forwards but my handler never sees events",
+        "fix": "Confirm Vapi is delivering to your tunnel URL by tailing `vapi-pp-cli logs webhooks`; check `--skip-verify` if your local handler is HTTPS with a self-signed cert."
+      }
+    ],
+    "when_to_use": "Reach for vapi-pp-cli when an agent needs to plan or audit Vapi resources, answer cost/quality questions across many calls, search transcripts, detect orphan tools/files, or stage bulk outbound calls. For one-off browser-OAuth login or framework SDK install, the upstream `vapi` CLI is fine — they coexist.",
+    "recipes": [
+      {
+        "title": "Field-projected list of recent calls",
+        "command": "vapi-pp-cli call find-all --json --select id,assistantId,status,endedReason,cost,startedAt --limit 50",
+        "explanation": "Agent-native; pipe to jq or feed straight back into the LLM context with low token cost."
+      },
+      {
+        "title": "Why are my calls ending",
+        "command": "vapi-pp-cli calls why --since 24h --json",
+        "explanation": "Histogram of endedReason in one call; great for daily triage agents."
+      },
+      {
+        "title": "Find calls about a topic",
+        "command": "vapi-pp-cli transcripts search 'refund' --since 30d --json --select id,assistantId,startedAt",
+        "explanation": "FTS5 across every synced transcript with field projection — agent context-friendly."
+      },
+      {
+        "title": "Compare two assistants over a window",
+        "command": "vapi-pp-cli assistants compare a1b2 c3d4 --since 7d --json",
+        "explanation": "Cost, duration, and ended-reason distribution side by side."
+      },
+      {
+        "title": "Stage a bulk call without sending",
+        "command": "vapi-pp-cli calls bulk --help",
+        "explanation": "Bulk-call planner. Provide --csv \u003cpath\u003e --assistant-id \u003cid\u003e --phone-number-id \u003cid\u003e; default is dry-run, pass --commit to actually place them."
+      }
+    ],
+    "trigger_phrases": [
+      "vapi cost last week",
+      "search vapi transcripts for",
+      "why are my vapi calls ending",
+      "list vapi assistants",
+      "use vapi-pp-cli",
+      "run vapi-pp-cli"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "run_id": "20260509-134026",
+  "sources": [
+    {
+      "source_name": "vapi",
+      "decision": "skip-silent",
+      "reason": "spec-complete (official OpenAPI 3.0 at https://api.vapi.ai/api-json with 79 endpoints across 15 resource tags; no gap signal)",
+      "asked_at": "2026-05-09T17:43:00Z"
+    }
+  ]
+}

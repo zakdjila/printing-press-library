@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-09T18:26:26.196634Z",
+  "printing_press_version": "4.2.0",
+  "api_name": "vapi",
+  "display_name": "Vapi",
+  "cli_name": "vapi-pp-cli",
+  "owner": "zakdjila",
+  "printer": "zakdjila",
+  "printer_name": "Zakariadiarra",
+  "spec_url": "https://api.vapi.ai/api-json",
+  "spec_path": "/Users/zakdiarra/printing-press/.runstate/cli-printing-press-cc71d5cc/runs/20260509-134026/vapi-spec.json",
+  "spec_format": "openapi3",
+  "spec_checksum": "sha256:158b112ed5a91db8844f1b6cac1413e2be3927dab31795c19015f3db884c5761",
+  "run_id": "20260509-134026",
+  "mcp_binary": "vapi-pp-mcp",
+  "mcp_tool_count": 79,
+  "mcp_ready": "full",
+  "api_version": "1.0",
+  "auth_type": "bearer_token",
+  "auth_env_vars": [
+    "VAPI_TOKEN"
+  ],
+  "novel_features": [
+    {
+      "name": "Cost rollup",
+      "command": "cost summary",
+      "description": "Aggregate call cost across the synced store by assistant, day, or phone number."
+    },
+    {
+      "name": "Transcript FTS",
+      "command": "transcripts search",
+      "description": "Full-text search across every synced call transcript with assistant/date filters."
+    },
+    {
+      "name": "Ended-reason histogram",
+      "command": "calls why",
+      "description": "Group recent calls by endedReason and print counts to surface drop-offs and silence-timeouts."
+    },
+    {
+      "name": "Orphan detection",
+      "command": "orphans",
+      "description": "List tools, files, phone numbers, and workflows that no assistant references."
+    },
+    {
+      "name": "Assistant A/B compare",
+      "command": "assistants compare",
+      "description": "Side-by-side cost, average duration, and ended-reason distribution for two assistants over a window."
+    },
+    {
+      "name": "Stale assistants",
+      "command": "stale assistants",
+      "description": "Assistants with no calls in the last N days based on the synced store."
+    },
+    {
+      "name": "Bulk-call planner",
+      "command": "calls bulk",
+      "description": "Read a CSV of customers and print a planned outbound batch with cost estimate; --dry-run by default."
+    },
+    {
+      "name": "Webhook replay",
+      "command": "listen replay",
+      "description": "Re-fire the last N captured webhook events at a forward target without waiting for a real call."
+    },
+    {
+      "name": "Live call watch",
+      "command": "calls watch",
+      "description": "Long-poll for newly active or ended calls and print one line per event."
+    },
+    {
+      "name": "Assistant drift",
+      "command": "drift assistants",
+      "description": "Diff every assistant against a baseline assistant to see system-prompt, model, voice, and tool drift."
+    }
+  ],
+  "category": "developer-tools",
+  "description": "Every Vapi feature, plus a local SQLite store that makes cost analytics, transcript search, and orphan cleanup possible \u2014 none of which the official CLI offers."
+}
