@@ -24,6 +24,12 @@ name: Verify library conventions
 #    required as Y" error after the proxy has already served the zip.
 #    The hubspot CLI shipped with this exact bug for some time before
 #    being caught.
+#
+# 4. Newly added library CLI packages must include the publish-package
+#    artifacts and provenance that reviewers need to audit the print:
+#    per-CLI AGENTS.md, patch manifest, manuscripts tied to run_id,
+#    novel feature metadata, MCP manifests when advertised, and the
+#    publish-skill PR body sections.
 
 on:
   pull_request:
@@ -32,6 +38,7 @@ on:
       - 'cli-skills/**'
       - 'registry.json'
       - 'tools/generate-skills/**'
+      - '.github/scripts/verify-publish-package/**'
       - '.github/workflows/verify-library-conventions.yml'
   workflow_dispatch:
 
@@ -85,6 +92,22 @@ jobs:
         run: |
           echo "::error file=registry.json::registry.json is generated on main from library metadata. Remove it from this fork PR and let generate-registry.yml update it after merge."
           exit 1
+
+      - name: Publish package completeness
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          git remote add base "https://github.com/${BASE_REPO}.git" 2>/dev/null || git remote set-url base "https://github.com/${BASE_REPO}.git"
+          base_remote_ref="refs/remotes/base/${BASE_REF}"
+          if ! git show-ref --verify --quiet "${base_remote_ref}"; then
+            git fetch --no-tags base "${BASE_REF}:${base_remote_ref}"
+          fi
+
+          python3 .github/scripts/verify-publish-package/verify_publish_package.py --base-ref "${base_remote_ref}"
 
       - uses: actions/setup-go@v6
         with:
